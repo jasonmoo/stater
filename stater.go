@@ -51,7 +51,7 @@ func Shutdown() {
 	DefaultRegistry.Shutdown()
 }
 
-func (r Registry) Register(s *Stater) {
+func (r Registry) Register(s Stater) {
 	DefaultRegistry[s] = true
 }
 func (r Registry) Timer(key string, value time.Duration, rate float32) {
