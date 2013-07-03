@@ -17,7 +17,7 @@ type (
 		Shutdown()
 	}
 
-	Registry map[*Stater]bool
+	Registry map[Stater]bool
 )
 
 var (
@@ -30,7 +30,7 @@ func CanSample(rate float32) bool {
 	return Rand.Float32() < rate
 }
 
-func Register(s *Stater) {
+func Register(s Stater) {
 	DefaultRegistry.Register(s)
 }
 
@@ -58,7 +58,7 @@ func (r Registry) Timer(key string, value time.Duration, rate float32) {
 	for s, active := range r {
 		if active {
 			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go (*s).Timer(key, value, rate)
+			go s.Timer(key, value, rate)
 		}
 	}
 }
@@ -66,7 +66,7 @@ func (r Registry) Gauge(key string, value interface{}, rate float32) {
 	for s, active := range r {
 		if active {
 			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go (*s).Gauge(key, value, rate)
+			go s.Gauge(key, value, rate)
 		}
 	}
 }
@@ -74,21 +74,21 @@ func (r Registry) Increment(key string, value int, rate float32) {
 	for s, active := range r {
 		if active {
 			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go (*s).Increment(key, value, rate)
+			go s.Increment(key, value, rate)
 		}
 	}
 }
 func (r Registry) Init() {
 	for s, active := range r {
 		if active {
-			(*s).Init()
+			s.Init()
 		}
 	}
 }
 func (r Registry) Shutdown() {
 	for s, active := range r {
 		if active {
-			(*s).Shutdown()
+			s.Shutdown()
 		}
 	}
 }
