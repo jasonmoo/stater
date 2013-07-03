@@ -81,16 +81,14 @@ func (r Registry) Increment(key string, value int, rate float32) {
 func (r Registry) Init() {
 	for s, active := range r {
 		if active {
-			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go (*s).Init()
+			(*s).Init()
 		}
 	}
 }
 func (r Registry) Shutdown() {
 	for s, active := range r {
 		if active {
-			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go (*s).Shutdown()
+			(*s).Shutdown()
 		}
 	}
 }
