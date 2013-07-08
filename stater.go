@@ -2,6 +2,7 @@ package stater
 
 import (
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -17,17 +18,17 @@ type (
 		Shutdown()
 	}
 
-	Registry map[Stater]bool
+	Registry []Stater
 )
 
 var (
 	Rand            = rand.New(rand.NewSource(time.Now().UnixNano()))
-	DefaultRegistry = make(Registry)
+	DefaultRegistry = Registry{}
 )
 
 // float 0.0 - 1.0
 func CanSample(rate float32) bool {
-	return Rand.Float32() < rate
+	return rate == 1.0 || Rand.Float32() < rate
 }
 
 func Register(s Stater) {
@@ -51,44 +52,47 @@ func Shutdown() {
 	DefaultRegistry.Shutdown()
 }
 
-func (r Registry) Register(s Stater) {
-	DefaultRegistry[s] = true
+func (r Registry) Register(s ...Stater) {
+	DefaultRegistry = append(DefaultRegistry, s...)
 }
-func (r Registry) Timer(key string, value time.Duration, rate float32) {
-	for s, active := range r {
-		if active {
-			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go s.Timer(key, value, rate)
-		}
+func (r Registry) Increment(key string, value int, rate float32) {
+	for _, s := range r {
+		// run each in separate goroutine to ensure staters are not
+		// affected by eachother's length of run (all should report
+		// at roughly the same time)
+		go s.Increment(key, value, rate)
 	}
 }
 func (r Registry) Gauge(key string, value interface{}, rate float32) {
-	for s, active := range r {
-		if active {
-			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go s.Gauge(key, value, rate)
-		}
+	for _, s := range r {
+		go s.Gauge(key, value, rate)
 	}
 }
-func (r Registry) Increment(key string, value int, rate float32) {
-	for s, active := range r {
-		if active {
-			// run each in separate goroutine to ensure each stater reports at roughly the same time
-			go s.Increment(key, value, rate)
-		}
+func (r Registry) Timer(key string, value time.Duration, rate float32) {
+	for _, s := range r {
+		go s.Timer(key, value, rate)
 	}
 }
+
 func (r Registry) Init() {
-	for s, active := range r {
-		if active {
+	wg := new(sync.WaitGroup)
+	wg.Add(len(r))
+	for _, s := range r {
+		go func() {
 			s.Init()
-		}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 }
 func (r Registry) Shutdown() {
-	for s, active := range r {
-		if active {
+	wg := new(sync.WaitGroup)
+	wg.Add(len(r))
+	for _, s := range r {
+		go func() {
 			s.Shutdown()
-		}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 }

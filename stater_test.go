@@ -1,9 +1,9 @@
 package stater
 
+/*
 import (
 	"testing"
 )
-
 func TestExample(t *testing.T) {
 	if false {
 		t.Errorf("%s", "hi")
@@ -17,3 +17,4 @@ func BenchmarkExample(b *testing.B) {
 		a, aa = aa, a
 	}
 }
+*/
