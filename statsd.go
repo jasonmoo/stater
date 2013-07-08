@@ -11,7 +11,6 @@ import (
 
 type Statsd struct {
 	Addr              string
-	BufferSize        int
 	ReconnectInterval time.Duration
 
 	active    uint32

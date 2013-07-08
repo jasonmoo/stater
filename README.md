@@ -35,16 +35,7 @@ A stater can be used individually...
 	func init() {
 
 		// output to statsd and stderr
-		stater.Register(&stater.Statsd{
-
-			// statsd server address
-			Addr: "stats.d.endpoint:8080",
-
-			// number of stat items to buffer before discarding stats
-			// if we are unable to push stats to the statsd server
-			BufferSize: 1 << 20, // 1m
-
-		})
+		stater.Register(&stater.Statsd{Addr: "stats.d.endpoint:8080"})
 
 		// the stater package has some builtins
 		stater.Register(&stater.Devnull{})
@@ -90,10 +81,9 @@ Multiple registries can be run with thread-safety, and you can add your own cust
 		reg, debug := make(stater.Registry), make(stater.Registry)
 
 		reg.Register(&stater.Statsd{
-			Addr:       "stats.d.endpoint:8080",
-			BufferSize: 1 << 20,
+			Addr:              "stats.d.endpoint:8080",
+			ReconnectInterval: time.Second,
 		})
-		reg.Register(&DevNull{})
 
 		debug.Register(&stater.Debug{os.Stderr})
 
