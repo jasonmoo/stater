@@ -20,7 +20,7 @@ type Statsd struct {
 	stats     chan string
 }
 
-const defaultReconnectInterval = time.Second
+const DefaultReconnectInterval = time.Second
 
 func (d *Statsd) Timer(key string, value time.Duration, rate float32) {
 	d.sendf("%s:%d|ms", key, value/time.Millisecond, rate)
@@ -48,6 +48,10 @@ func (d *Statsd) Init() {
 	d.conn, err = net.DialUDP("udp", nil, d.addr)
 	if err != nil {
 		log.Fatal("unable to connect to statsd addr", err)
+	}
+
+	if d.ReconnectInterval == 0 {
+		d.ReconnectInterval = DefaultReconnectInterval
 	}
 
 	// set up a reconnection function that tries to
