@@ -34,10 +34,10 @@ A stater can be used individually...
 
 	func init() {
 
-		// output to statsd and stderr
+		// output to statsd 
 		stater.Register(&stater.Statsd{Addr: "stats.d.endpoint:8080"})
 
-		// the stater package has some builtins
+		// also to stderr and stdout, devnull does nothing
 		stater.Register(&stater.Devnull{})
 		stater.Register(&stater.Debug{os.Stderr})
 		stater.Register(&stater.Debug{os.Stdout})
@@ -65,36 +65,34 @@ A stater can be used individually...
 
 Multiple registries can be run with thread-safety, and you can add your own custom staters.
 
-	// a custom stater that does nothing
-	type DevNull struct{}
-
-	// must implement the stater.Stater interface to be accepted by a registry
-	func (d *DevNull) Timer(key string, value time.Duration, rate float64) {}
-	func (d *DevNull) Gauge(key string, value interface{}, rate float64)   {}
-	func (d *DevNull) Increment(key string, value int, rate float64)       {}
-	func (d *DevNull) Init()                                               {}
-	func (d *DevNull) Shutdown()                                           {}
-
+	// a polite stater that does nothing
+	type HelloGoodbye stater.DevNull
+	
+	func (h *HelloGoodbye) Init()     { fmt.Println("Hello") }
+	func (h *HelloGoodbye) Shutdown() { fmt.Println("Goodbye") }
+	
 	func main() {
-
+	
 		// use make because the underlying type is a map
 		reg, debug := make(stater.Registry), make(stater.Registry)
-
+	
+		reg.Register(&HelloGoodbye{})
 		reg.Register(&stater.Statsd{
 			Addr:              "stats.d.endpoint:8080",
 			ReconnectInterval: time.Second,
 		})
-
+	
 		debug.Register(&stater.Debug{os.Stderr})
-
+	
 		// initialize all staters
 		reg.Init()
 		defer reg.Shutdown()
 		debug.Init()
 		defer debug.Shutdown()
-
+	
 		debug.Gauge("my.value", "not set", 1.0)
 		reg.Increment("my.value", 20, 1.0)
 		debug.Gauge("my.value", "set", 1.0)
-
+	
 	}
+
