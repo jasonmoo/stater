@@ -2,7 +2,6 @@ package stater
 
 import (
 	"math/rand"
-	"sync"
 	"time"
 )
 
@@ -75,24 +74,12 @@ func (r Registry) Timer(key string, value time.Duration, rate float32) {
 }
 
 func (r Registry) Init() {
-	wg := new(sync.WaitGroup)
-	wg.Add(len(r))
 	for _, s := range r {
-		go func() {
-			s.Init()
-			wg.Done()
-		}()
+		s.Init()
 	}
-	wg.Wait()
 }
 func (r Registry) Shutdown() {
-	wg := new(sync.WaitGroup)
-	wg.Add(len(r))
 	for _, s := range r {
-		go func() {
-			s.Shutdown()
-			wg.Done()
-		}()
+		s.Shutdown()
 	}
-	wg.Wait()
 }
